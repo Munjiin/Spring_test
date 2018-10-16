@@ -1,0 +1,229 @@
+프로젝트 명: test
+1) fortuneUI
+package org.zerock.ui;
+
+import java.util.Scanner;
+
+import org.zerock.service.FortuneService;
+
+import lombok.Setter;
+
+@Setter
+public class FortuneUI {
+	
+	private Scanner scanner = new Scanner(System.in);
+	private FortuneService service;
+	
+	public void start() {
+		System.out.println("마음의 준비를 하고 엔터");
+		scanner.nextLine();//엔터 인식
+		String result = service.getResult();//결과 가져오기
+		System.out.println(result);
+	}
+	
+
+}
+
+
+2)fortuneservice
+package org.zerock.service;
+
+public class FortuneService {
+	
+	
+	//결과 얘기해주기
+	public String getResult(){
+		return "hello";
+	}
+
+}
+
+
+
+3)fortunetests
+package org.zerock.test;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.zerock.ui.FortuneUI;
+
+import lombok.extern.log4j.Log4j;
+
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration("file:src/main/webapp/WEB-INF/spring/root-context.xml")
+@Log4j
+public class FortuneTests {
+
+	@Autowired
+	private FortuneUI ui;
+	
+	@Test
+	public void test() {
+		ui.start();
+	}
+	
+}
+
+
+4)root-context
+<!-- 포춘쿠키 용 -->
+	
+	<bean id="service" class="org.zerock.service.FortuneService">
+	</bean>
+	
+	<bean id="ui" class="org.zerock.ui.FortuneUI">
+	<property name="service" ref="service"></property>
+	</bean>
+
+
+5)오류나서
+<property name="jdbcUrl" value="jdbc:mysql://10.10.10.102:3306/heyyo?useSSL=false&amp;serverTimezone=Asia/Seoul&amp;allowPublicKeyRetrieval=true"></property> 추가
+
+
+---------------------의존성 주입 쉽게
+1)root에 있는 써있는 빈을 다 지움
+2)fortuneservice
+@Service
+public class FortuneService {
+
+3)@Component
+@Setter
+public class FortuneUI {
+	
+	private Scanner scanner = new Scanner(System.in);
+	@Autowired
+	private FortuneService service;
+	
+	public void start() {
+		System.out.println("마음의 준비를 하고 엔터");
+		scanner.nextLine();//엔터 인식
+		String result = service.getResult();//결과 가져오기
+		System.out.println(result);
+	}
+	
+
+}
+4)root-context
+	<context:component-scan base-package="org.zerock.ui"></context:component-scan>
+	<context:component-scan base-package="org.zerock.service"></context:component-scan>
+
+
+===========================디비 연결
+1)fortuneservice
+package org.zerock.service;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+import javax.sql.DataSource; //꼭 이걸로 등록하기
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service //스프링의 빈이 되기 위한 것 . 비지니스 쪽
+public class FortuneService {
+	
+	private DataSource ds; //디비 연결
+	
+	@Autowired
+	public void setDs(DataSource ds) {
+		this.ds = ds;
+	} //alt shift s
+	
+	
+
+
+//	public DataSource getDs() {
+//		String result = null;
+//	}
+
+
+
+
+	//결과 얘기해주기
+	public String getResult(){
+//		return "hello";
+		String result = null;
+		
+		try(Connection con = ds.getConnection();){
+			PreparedStatement pstmt = con.prepareStatement("select now()");
+			ResultSet rs = pstmt.executeQuery();
+			{
+				rs.next();
+				result=rs.getString(1);
+			}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return result;
+	}
+
+}
+
+2) 홈 컨트롤러
+package org.zerock.test;
+
+import java.text.DateFormat;
+import java.util.Date;
+import java.util.Locale;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.zerock.service.FortuneService;
+
+import lombok.extern.log4j.Log4j;
+
+/**
+ * Handles requests for the application home page.
+ */
+@Log4j
+@Controller //웹쪽
+public class HomeController {
+	
+	private FortuneService service;
+	
+	@Autowired
+	public void setService(FortuneService service) {
+		this.service=service;
+	}
+	
+	//private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
+	
+	/**
+	 * Simply selects the home view to render by returning its name.
+	 */
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	public String home(Locale locale, Model model) {
+		//logger.info("Welcome home! The client locale is {}.", locale);
+		log.warn("log test");
+		
+		Date date = new Date();
+		DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.LONG, locale);
+		
+		String formattedDate = dateFormat.format(date);
+		
+		model.addAttribute("serverTime", formattedDate );
+		
+		return "home";
+	}
+	
+}
+
+
+
+...(?)
+
+===============4번째 방법
+1)fortuneservice
+2)homecontroller
+
+https://github.com/hermes7308/study/wiki/@Autowired,-@Resource,-@Inject,-@Qualifier%EC%9D%98-%EC%B0%A8%EC%9D%B4 : 차이 정리 블로그
+
