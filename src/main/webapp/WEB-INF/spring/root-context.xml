@@ -1,13 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+	
+	<!--빈 선언한 것들을 root에  -->
+	<context:component-scan base-package="org.zerock.ui"></context:component-scan>
+	<context:component-scan base-package="org.zerock.service"></context:component-scan>
+	
+	
+	
+	
+	
+	
 	
 	<!-- Root Context: defines shared resources visible to all other web components -->
 	
 	<bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
 		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver"></property>
-		<property name="jdbcUrl" value="jdbc:mysql://10.10.10.102:3306/heyyo?useSSL=false&amp;serverTimezone=Asia/Seoul"></property>
+		<property name="jdbcUrl" value="jdbc:mysql://10.10.10.102:3306/heyyo?useSSL=false&amp;serverTimezone=Asia/Seoul&amp;allowPublicKeyRetrieval=true"></property>
 		<property name="username" value="jiin"></property>
 		<property name="password" value="12345678"></property>
 		</bean>
